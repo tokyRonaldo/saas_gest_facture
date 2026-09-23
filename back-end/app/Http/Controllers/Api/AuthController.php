@@ -19,6 +19,11 @@ class AuthController extends Controller
             return response()->json(['message' => 'Identifiants invalides'], 401);
         }
 
+        if (!Auth::user()->actif) {
+            Auth::logout();
+            return response()->json(['message' => 'Ce compte a été désactivé.'], 403);
+        }
+
         $request->session()->regenerate();
 
         return response()->json(['user' => $this->userWithPermissions()]);

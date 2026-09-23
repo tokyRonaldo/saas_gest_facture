@@ -9,6 +9,9 @@ use App\Http\Controllers\Api\StockMovementController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\ProfileController;
+
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -56,5 +59,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('permission:dashboard.view')->group(function () {
         Route::get('/dashboard/admin', [DashboardController::class, 'admin']);
         Route::get('/dashboard/simple', [DashboardController::class, 'simple']);
+    });
+
+    Route::middleware('permission:users.view')->group(function () {
+        Route::get('/users', [UserController::class, 'index']);
+        Route::get('/users/{user}', [UserController::class, 'show']);
+    });
+    Route::middleware('permission:users.create')->post('/users', [UserController::class, 'store']);
+    Route::middleware('permission:users.edit')->group(function () {
+        Route::put('/users/{user}', [UserController::class, 'update']);
+        Route::patch('/users/{user}/toggle-actif', [UserController::class, 'toggleActif']);
+    });
+    Route::middleware('permission:users.delete')->delete('/users/{user}', [UserController::class, 'destroy']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        // ... routes existantes (logout, me, clients, etc.)
+        Route::put('/me', [ProfileController::class, 'update']);
     });
 });
