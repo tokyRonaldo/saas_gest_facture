@@ -1,18 +1,22 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { invoicesApi } from '@/api/invoices'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import PaymentModal from '@/components/PaymentModal.vue'
 
 const invoices = ref([])
 const loading = ref(false)
+const search = ref('')
+const statutFiltre = ref('')
+const dateDebut = ref('')
+const dateFin = ref('')
+
 const selectedInvoice = ref(null)
 const showModal = ref(false)
 const showPaymentModal = ref(false)
+const confirmState = ref(null)
 const error = ref('')
-
-// État du modal de confirmation générique
-const confirmState = ref(null) // { title, message, confirmLabel, danger, action }
+const downloading = ref(false)
 
 const statutStyle = {
   brouillon: 'bg-slate-100 text-slate-600',
@@ -24,15 +28,43 @@ const statutLabel = {
   brouillon: 'Brouillon', envoyee: 'Envoyée', payee: 'Payée', annulee: 'Annulée',
 }
 
+const filtresStatut = [
+  { value: '', label: 'Tous les statuts' },
+  { value: 'brouillon', label: 'Brouillon' },
+  { value: 'envoyee', label: 'Envoyée' },
+  { value: 'en_retard', label: 'En retard' },
+  { value: 'payee', label: 'Payée' },
+  { value: 'annulee', label: 'Annulée' },
+]
+
 function estEnRetard(invoice) {
   return invoice.statut === 'envoyee' && new Date(invoice.date_echeance) < new Date()
 }
 
 async function fetchInvoices() {
   loading.value = true
-  const { data } = await invoicesApi.list()
+  const { data } = await invoicesApi.list({
+    search: search.value || undefined,
+    statut: statutFiltre.value || undefined,
+    date_debut: dateDebut.value || undefined,
+    date_fin: dateFin.value || undefined,
+  })
   invoices.value = data.data
   loading.value = false
+}
+
+let debounce
+watch(search, () => {
+  clearTimeout(debounce)
+  debounce = setTimeout(fetchInvoices, 300)
+})
+watch([statutFiltre, dateDebut, dateFin], fetchInvoices)
+
+function reinitialiserFiltres() {
+  search.value = ''
+  statutFiltre.value = ''
+  dateDebut.value = ''
+  dateFin.value = ''
 }
 
 async function openDetail(inv) {
@@ -114,6 +146,15 @@ async function rafraichirDetail() {
   fetchInvoices() // pour mettre à jour le statut dans la liste aussi
 }
 
+async function telechargerPdf() {
+  downloading.value = true
+  try {
+    await invoicesApi.downloadPdf(selectedInvoice.value.id, selectedInvoice.value.numero)
+  } finally {
+    downloading.value = false
+  }
+}
+
 onMounted(fetchInvoices)
 </script>
 
@@ -132,12 +173,55 @@ onMounted(fetchInvoices)
       </router-link>
     </div>
 
+    <!-- Barre de recherche + filtres -->
+    <div class="flex flex-wrap items-center gap-3 mb-4">
+      <input
+        v-model="search"
+        type="text"
+        placeholder="Rechercher par numéro ou client..."
+        class="flex-1 min-w-[240px] px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm
+               focus:outline-none focus:ring-2 focus:ring-blue-600"
+      />
+
+      <select
+        v-model="statutFiltre"
+        class="px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+      >
+        <option v-for="f in filtresStatut" :key="f.value" :value="f.value">{{ f.label }}</option>
+      </select>
+
+      <input
+        v-model="dateDebut"
+        type="date"
+        class="px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm"
+        title="Émise à partir du"
+      />
+      <span class="text-slate-400 text-sm">→</span>
+      <input
+        v-model="dateFin"
+        type="date"
+        class="px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm"
+        title="Émise jusqu'au"
+      />
+
+      <button
+        v-if="search || statutFiltre || dateDebut || dateFin"
+        @click="reinitialiserFiltres"
+        class="px-4 py-2.5 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition"
+      >
+        Réinitialiser
+      </button>
+
+    </div>
+
+     <!-- Tableau -->
     <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <table class="w-full text-sm">
         <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
           <tr>
             <th class="text-left px-4 py-3">Numéro</th>
             <th class="text-left px-4 py-3">Client</th>
+            <th class="text-left px-4 py-3">Émission</th>
             <th class="text-left px-4 py-3">Échéance</th>
             <th class="text-left px-4 py-3">Total TTC</th>
             <th class="text-left px-4 py-3">Statut</th>
@@ -145,11 +229,12 @@ onMounted(fetchInvoices)
           </tr>
         </thead>
         <tbody>
-          <tr v-if="loading"><td colspan="6" class="text-center py-6 text-slate-400">Chargement...</td></tr>
-          <tr v-else-if="invoices.length === 0"><td colspan="6" class="text-center py-6 text-slate-400">Aucune facture</td></tr>
+          <tr v-if="loading"><td colspan="7" class="text-center py-6 text-slate-400">Chargement...</td></tr>
+          <tr v-else-if="invoices.length === 0"><td colspan="7" class="text-center py-6 text-slate-400">Aucune facture trouvée</td></tr>
           <tr v-for="inv in invoices" :key="inv.id" class="border-t border-slate-100">
             <td class="px-4 py-3 font-medium text-slate-900">{{ inv.numero || '—' }}</td>
             <td class="px-4 py-3 text-slate-600">{{ inv.client.nom }}</td>
+            <td class="px-4 py-3 text-slate-600">{{ formatDate(inv.date_emission) }}</td>
             <td class="px-4 py-3 text-slate-600">{{ formatDate(inv.date_echeance) }}</td>
             <td class="px-4 py-3 text-slate-600">{{ formatMontant(inv.total_ttc) }} Ar</td>
             <td class="px-4 py-3 space-x-1">
@@ -158,6 +243,9 @@ onMounted(fetchInvoices)
               </span>
               <span v-if="estEnRetard(inv)" class="text-xs font-medium px-2.5 py-1 rounded-full bg-orange-100 text-orange-700">
                 En retard
+              </span>
+              <span v-if="inv.partiellement_payee" class="text-xs font-medium px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700">
+                Partielle
               </span>
             </td>
             <td class="px-4 py-3 text-right space-x-2">
@@ -179,7 +267,18 @@ onMounted(fetchInvoices)
       <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold text-slate-900">{{ selectedInvoice.numero || 'Brouillon' }}</h2>
-          <button @click="showModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="selectedInvoice.numero"
+              @click="telechargerPdf"
+              :disabled="downloading"
+              class="text-slate-600 hover:text-slate-900 disabled:opacity-50"
+              title="Télécharger le PDF"
+            >
+              {{ downloading ? '⏳' : '⬇️' }}
+            </button>
+            <button @click="showModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+          </div>
         </div>
 
         <p class="text-sm text-slate-600 mb-1">Client : <strong>{{ selectedInvoice.client.nom }}</strong></p>

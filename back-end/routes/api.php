@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\StockMovementController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\DashboardController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -49,4 +50,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('permission:payments.view')->get('/invoices/{invoice}/payments', [PaymentController::class, 'index']);
     Route::middleware('permission:payments.create')->post('/invoices/{invoice}/payments', [PaymentController::class, 'store']);
     Route::middleware('permission:payments.delete')->delete('/payments/{payment}', [PaymentController::class, 'destroy']);
+
+    Route::middleware('permission:invoices.download')->get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
+
+    Route::middleware('permission:dashboard.view')->group(function () {
+        Route::get('/dashboard/admin', [DashboardController::class, 'admin']);
+        Route::get('/dashboard/simple', [DashboardController::class, 'simple']);
+    });
 });

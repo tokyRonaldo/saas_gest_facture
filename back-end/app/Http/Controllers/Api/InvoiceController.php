@@ -7,20 +7,45 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class InvoiceController extends Controller
 {
     public function __construct(private InvoiceService $invoiceService) {}
 
+
     public function index(Request $request)
     {
         $query = Invoice::with('client:id,nom');
 
-        if ($statut = $request->query('statut')) {
-            $query->where('statut', $statut);
+        // Recherche par numéro ou nom client
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('numero', 'like', "%{$search}%")
+                ->orWhereHas('client', fn ($c) => $c->where('nom', 'like', "%{$search}%"));
+            });
         }
 
-        return $query->latest()->paginate(10);
+        // Filtre par statut
+        if ($statut = $request->query('statut')) {
+            if ($statut === 'en_retard') {
+                $query->where('statut', 'envoyee')->where('date_echeance', '<', now());
+            } else {
+                $query->where('statut', $statut);
+            }
+        }
+
+        // Filtre par période d'émission
+        if ($dateDebut = $request->query('date_debut')) {
+            $query->whereDate('date_emission', '>=', $dateDebut);
+        }
+        if ($dateFin = $request->query('date_fin')) {
+            $query->whereDate('date_emission', '<=', $dateFin);
+        }
+
+        return $query->latest()->paginate(10)
+            ->through(fn ($invoice) => $invoice->append(['montant_paye', 'reste_a_payer', 'partiellement_payee', 'en_retard']));
     }
 
     public function store(StoreInvoiceRequest $request)
@@ -79,5 +104,14 @@ class InvoiceController extends Controller
         $invoice->load('items.product', 'client', 'creator', 'payments.user');
 
         return response()->json($invoice->append(['montant_paye', 'reste_a_payer', 'partiellement_payee', 'en_retard']));
+    }
+
+    public function pdf(Invoice $invoice)
+    {
+        $invoice->load('items.product', 'client', 'creator');
+
+        $pdf = Pdf::loadView('pdf.invoice', ['invoice' => $invoice]);
+
+        return $pdf->download("{$invoice->numero}.pdf");
     }
 }
