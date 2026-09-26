@@ -19,6 +19,7 @@ class RolePermissionSeeder extends Seeder
              'stock.manage', // ← nouvelle permission
             'payments.view', 'payments.create', 'payments.edit', 'payments.delete',
             'dashboard.view', 'reports.view',
+            'settings.manage'
         ];
 
         foreach ($permissions as $permission) {

@@ -1,10 +1,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useSettingsStore } from '@/stores/settings'
+import { settingsApi } from '@/api/settings'
 import { useRouter, useRoute } from 'vue-router'
 import { ChevronRightIcon, UserCircleIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 const auth = useAuthStore()
+const settingsStore = useSettingsStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -32,7 +35,10 @@ function closeOnClickOutside(event) {
   }
 }
 
-onMounted(() => document.addEventListener('click', closeOnClickOutside))
+onMounted(() => {
+  settingsStore.fetch()
+  document.addEventListener('click', closeOnClickOutside)
+})
 onUnmounted(() => document.removeEventListener('click', closeOnClickOutside))
 
 async function logout() {
@@ -46,10 +52,18 @@ async function logout() {
     <!-- Sidebar -->
     <aside class="w-64 bg-slate-900 text-white flex flex-col">
       <div class="p-5 flex items-center gap-2 border-b border-slate-800">
-        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-sm">
-          F
+        <div class="w-8 h-8 rounded-lg overflow-hidden bg-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
+          <img
+            v-if="settingsStore.settings?.logo_path"
+            :src="settingsApi.logoUrl(settingsStore.settings.logo_path)"
+            alt="Logo"
+            class="w-full h-full object-contain"
+          />
+          <span v-else>{{ settingsStore.settings?.nom_entreprise?.[0] || 'F' }}</span>
         </div>
-        <span class="font-bold text-lg">FacturaApp</span>
+        <span class="font-bold text-lg truncate">
+          {{ settingsStore.settings?.nom_entreprise || 'FacturaApp' }}
+        </span>
       </div>
 
       <nav class="flex-1 p-3 space-y-1">

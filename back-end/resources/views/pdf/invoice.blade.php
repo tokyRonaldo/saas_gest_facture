@@ -27,7 +27,13 @@
 </head>
 <body>
     <div class="header">
-        <div class="logo-box">FacturaApp</div>
+        <div class="logo-box">
+            @if($company->logo_path)
+                <img src="{{ public_path('storage/' . $company->logo_path) }}" style="max-height: 40px; max-width: 160px;">
+            @else
+                {{ $company->nom_entreprise }}
+            @endif
+        </div>
         <div class="facture-title">
             <h1>FACTURE</h1>
             <p>{{ $invoice->numero }}</p>
@@ -70,7 +76,7 @@
                 <tr>
                     <td>{{ $item->product->nom }}</td>
                     <td class="text-right">{{ $item->quantite }} {{ $item->product->unite }}</td>
-                    <td class="text-right">{{ number_format($item->prix_unitaire_ht, 2, ',', ' ') }} Ar</td>
+                    <td class="text-right">{{ number_format($item->prix_unitaire_ht, 2, ',', ' ') }} {{ $company->devise }}</td>
                     <td class="text-right">{{ $item->tva_taux }}%</td>
                     <td class="text-right">{{ number_format($item->total_ligne, 2, ',', ' ') }} Ar</td>
                 </tr>
@@ -85,7 +91,19 @@
     </div>
 
     <div class="footer">
-        <p>Facture générée par FacturaApp — Émise par {{ $invoice->creator->name }}</p>
+        <p>
+            <strong>{{ $company->nom_entreprise }}</strong>
+            @if($company->adresse) — {{ $company->adresse }} @endif
+            @if($company->ville) , {{ $company->ville }} @endif
+        </p>
+        <p>
+            @if($company->email) {{ $company->email }} @endif
+            @if($company->telephone) — {{ $company->telephone }} @endif
+            @if($company->nif_stat) — NIF/STAT : {{ $company->nif_stat }} @endif
+        </p>
+        @if($company->conditions_paiement)
+            <p style="margin-top: 8px; font-style: italic;">{{ $company->conditions_paiement }}</p>
+        @endif
     </div>
 </body>
 </html>

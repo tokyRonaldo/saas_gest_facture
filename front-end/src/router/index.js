@@ -15,6 +15,7 @@ import InvoiceDetail from '@/views/invoices/InvoiceDetail.vue'
 import UsersList from '@/views/users/UsersList.vue'
 import UserForm from '@/views/users/UserForm.vue'
 import Profile from '../views/Profile.vue'
+import Settings from '@/views/Settings.vue'
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
@@ -49,6 +50,11 @@ const routes = [
       {
         path: 'clients/:id/modifier', name: 'client-edit', component: ClientForm,
         meta: { permission: 'clients.edit', breadcrumb: [{ label: 'Clients', to: '/clients' }, { label: 'Modifier client' }] },
+      },
+
+      {
+        path: 'parametres', name: 'parametres', component: Settings,
+        meta: { permission: 'settings.manage', breadcrumb: [{ label: 'Paramètres' }] },
       },
     ],
   },

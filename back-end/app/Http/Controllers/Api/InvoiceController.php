@@ -7,6 +7,7 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
+use App\Models\CompanySetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 
@@ -109,8 +110,9 @@ class InvoiceController extends Controller
     public function pdf(Invoice $invoice)
     {
         $invoice->load('items.product', 'client', 'creator');
+        $company = CompanySetting::firstOrFail();
 
-        $pdf = Pdf::loadView('pdf.invoice', ['invoice' => $invoice]);
+        $pdf = Pdf::loadView('pdf.invoice', ['invoice' => $invoice, 'company' => $company]);
 
         return $pdf->download("{$invoice->numero}.pdf");
     }

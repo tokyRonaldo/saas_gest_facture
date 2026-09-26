@@ -11,7 +11,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProfileController;
-
+use App\Http\Controllers\Api\CompanySettingController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -76,4 +76,13 @@ Route::middleware('auth:sanctum')->group(function () {
         // ... routes existantes (logout, me, clients, etc.)
         Route::put('/me', [ProfileController::class, 'update']);
     });
+
+});
+// Lecture accessible à tous les connectés (le nom/logo doivent s'afficher partout, pas juste pour ADMIN)
+Route::middleware('auth:sanctum')->get('/settings', [CompanySettingController::class, 'show']);
+
+// Modification réservée à ADMIN
+Route::middleware(['auth:sanctum', 'permission:settings.manage'])->group(function () {
+    Route::put('/settings', [CompanySettingController::class, 'update']);
+    Route::post('/settings/logo', [CompanySettingController::class, 'uploadLogo']);
 });

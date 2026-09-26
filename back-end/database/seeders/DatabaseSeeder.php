@@ -24,5 +24,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
         ])->assignRole('admin');
+
+        $this->call([RolePermissionSeeder::class, CompanySettingSeeder::class]);
     }
 }
