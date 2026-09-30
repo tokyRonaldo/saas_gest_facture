@@ -15,12 +15,12 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        if (!Auth::guard('web')->attempt($request->only('email', 'password'))) {
             return response()->json(['message' => 'Identifiants invalides'], 401);
         }
 
-        if (!Auth::user()->actif) {
-            Auth::logout();
+        if (!Auth::guard('web')->user()->actif) {
+            Auth::guard('web')->logout();
             return response()->json(['message' => 'Ce compte a été désactivé.'], 403);
         }
 
@@ -31,7 +31,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -45,7 +45,7 @@ class AuthController extends Controller
 
     private function userWithPermissions()
     {
-        $user = Auth::user();
+        $user = Auth::guard('web')->user();
         return [
             'id' => $user->id,
             'name' => $user->name,
