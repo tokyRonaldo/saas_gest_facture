@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -11,34 +10,23 @@ const deleting = ref(false)
 
 const router = useRouter()
 
-// Client sélectionné pour la suppression
 const clientToDelete = ref(null)
 
-// Ouvre la modal
 function openDeleteModal(client) {
   clientToDelete.value = client
 }
 
-// Ferme la modal
 function closeDeleteModal() {
   if (deleting.value) return
-
   clientToDelete.value = null
 }
 
-// Suppression
 async function confirmDelete() {
   if (!clientToDelete.value) return
-
   deleting.value = true
-
   try {
     await clientsApi.remove(clientToDelete.value.id)
-
-    // Fermer la modal
     clientToDelete.value = null
-
-    // Recharger la liste
     await fetchClients()
   } catch (error) {
     console.error('Erreur lors de la suppression du client :', error)
@@ -49,12 +37,8 @@ async function confirmDelete() {
 
 async function fetchClients() {
   loading.value = true
-
   try {
-    const { data } = await clientsApi.list({
-      search: search.value
-    })
-
+    const { data } = await clientsApi.list({ search: search.value })
     clients.value = data.data
   } catch (error) {
     console.error('Erreur lors du chargement des clients :', error)
@@ -64,10 +48,8 @@ async function fetchClients() {
 }
 
 let debounce
-
 watch(search, () => {
   clearTimeout(debounce)
-
   debounce = setTimeout(fetchClients, 300)
 })
 
@@ -77,12 +59,11 @@ onMounted(fetchClients)
 <template>
   <div>
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900">
           Clients
         </h1>
-
         <p class="text-sm text-slate-500">
           Gère la liste de tes clients
         </p>
@@ -107,101 +88,84 @@ onMounted(fetchClients)
 
     <!-- Tableau -->
     <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
-          <tr>
-            <th class="text-left px-4 py-3">Nom</th>
-            <th class="text-left px-4 py-3">Email</th>
-            <th class="text-left px-4 py-3">Téléphone</th>
-            <th class="text-left px-4 py-3">Ville</th>
-            <th class="text-right px-4 py-3">Actions</th>
-          </tr>
-        </thead>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[640px]">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+            <tr>
+              <th class="text-left px-4 py-3">Nom</th>
+              <th class="text-left px-4 py-3">Email</th>
+              <th class="text-left px-4 py-3">Téléphone</th>
+              <th class="text-left px-4 py-3">Ville</th>
+              <th class="text-right px-4 py-3">Actions</th>
+            </tr>
+          </thead>
 
-        <tbody>
-          <!-- Loading -->
-          <tr v-if="loading">
-            <td
-              colspan="5"
-              class="text-center py-6 text-slate-400"
+          <tbody>
+            <tr v-if="loading">
+              <td colspan="5" class="text-center py-6 text-slate-400">
+                Chargement...
+              </td>
+            </tr>
+
+            <tr v-else-if="clients.length === 0">
+              <td colspan="5" class="text-center py-6 text-slate-400">
+                Aucun client
+              </td>
+            </tr>
+
+            <tr
+              v-for="client in clients"
+              :key="client.id"
+              class="border-t border-slate-100 hover:bg-slate-50/50 transition"
             >
-              Chargement...
-            </td>
-          </tr>
-
-          <!-- Aucun client -->
-          <tr v-else-if="clients.length === 0">
-            <td
-              colspan="5"
-              class="text-center py-6 text-slate-400"
-            >
-              Aucun client
-            </td>
-          </tr>
-
-          <!-- Clients -->
-          <tr
-            v-for="client in clients"
-            :key="client.id"
-            class="border-t border-slate-100 hover:bg-slate-50/50 transition"
-          >
-            <td class="px-4 py-3 font-medium text-slate-900">
-              {{ client.nom }}
-            </td>
-
-            <td class="px-4 py-3 text-slate-600">
-              {{ client.email || '—' }}
-            </td>
-
-            <td class="px-4 py-3 text-slate-600">
-              {{ client.telephone || '—' }}
-            </td>
-
-            <td class="px-4 py-3 text-slate-600">
-              {{ client.ville || '—' }}
-            </td>
-
-            <td class="px-4 py-3 text-right space-x-2">
-              <!-- Modifier -->
-              <button
-                @click="router.push(`/clients/${client.id}/modifier`)"
-                class="text-blue-600 hover:text-blue-800 transition"
-                title="Modifier"
-              >
-                ✏️
-              </button>
-
-              <!-- Supprimer -->
-              <button
-                @click="openDeleteModal(client)"
-                class="text-red-500 hover:text-red-700 transition"
-                title="Supprimer"
-              >
-                🗑️
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                {{ client.nom }}
+              </td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
+                {{ client.email || '—' }}
+              </td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
+                {{ client.telephone || '—' }}
+              </td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
+                {{ client.ville || '—' }}
+              </td>
+              <td class="px-4 py-3 text-right whitespace-nowrap space-x-2">
+                <button
+                  @click="router.push(`/clients/${client.id}/modifier`)"
+                  class="text-blue-600 hover:text-blue-800 transition"
+                  title="Modifier"
+                >
+                  ✏️
+                </button>
+                <button
+                  @click="openDeleteModal(client)"
+                  class="text-red-500 hover:text-red-700 transition"
+                  title="Supprimer"
+                >
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- ===================================================== -->
     <!-- MODAL CONFIRMATION SUPPRESSION -->
     <!-- ===================================================== -->
-
     <Teleport to="body">
       <Transition name="modal">
         <div
           v-if="clientToDelete"
           class="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
-          <!-- Overlay -->
           <div
             class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
             @click="closeDeleteModal"
           ></div>
 
-          <!-- Modal -->
           <div
             class="relative w-full max-w-md bg-white rounded-2xl shadow-xl
                    border border-slate-200 overflow-hidden"
@@ -209,9 +173,7 @@ onMounted(fetchClients)
             aria-modal="true"
             aria-labelledby="delete-modal-title"
           >
-            <!-- Contenu -->
             <div class="p-6">
-              <!-- Icône -->
               <div
                 class="mx-auto flex items-center justify-center
                        w-12 h-12 rounded-full bg-red-100 mb-4"
@@ -231,7 +193,6 @@ onMounted(fetchClients)
                 </svg>
               </div>
 
-              <!-- Titre -->
               <h2
                 id="delete-modal-title"
                 class="text-lg font-semibold text-slate-900 text-center"
@@ -239,7 +200,6 @@ onMounted(fetchClients)
                 Supprimer ce client ?
               </h2>
 
-              <!-- Message -->
               <p class="mt-2 text-sm text-slate-500 text-center">
                 Es-tu sûr de vouloir supprimer
                 <span class="font-semibold text-slate-700">
@@ -253,12 +213,10 @@ onMounted(fetchClients)
               </p>
             </div>
 
-            <!-- Footer -->
             <div
-              class="flex items-center justify-end gap-3
+              class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3
                      px-6 py-4 bg-slate-50 border-t border-slate-100"
             >
-              <!-- Annuler -->
               <button
                 type="button"
                 @click="closeDeleteModal"
@@ -271,7 +229,6 @@ onMounted(fetchClients)
                 Annuler
               </button>
 
-              <!-- Confirmer -->
               <button
                 type="button"
                 @click="confirmDelete"
@@ -283,7 +240,6 @@ onMounted(fetchClients)
                        disabled:opacity-60 disabled:cursor-not-allowed
                        min-w-[100px]"
               >
-                <!-- Spinner -->
                 <svg
                   v-if="deleting"
                   class="w-4 h-4 animate-spin"
@@ -298,14 +254,12 @@ onMounted(fetchClients)
                     stroke="currentColor"
                     stroke-width="4"
                   ></circle>
-
                   <path
                     class="opacity-75"
                     fill="currentColor"
                     d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                   ></path>
                 </svg>
-
                 {{ deleting ? 'Suppression...' : 'Supprimer' }}
               </button>
             </div>

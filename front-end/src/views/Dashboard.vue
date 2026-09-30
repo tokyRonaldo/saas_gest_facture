@@ -63,7 +63,7 @@ onMounted(fetchDashboard)
 
     <!-- Vue ADMIN -->
     <template v-if="isAdmin">
-      <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Chiffre d'affaires" :value="formatMontant(data.chiffre_affaires)"
           icon="$" icon-bg="bg-green-100" icon-color="text-green-700" :evolution="data.chiffre_affaires_evolution" />
         <StatCard label="Factures émises" :value="data.factures_emises"
@@ -74,8 +74,8 @@ onMounted(fetchDashboard)
           icon="👥" icon-bg="bg-purple-100" icon-color="text-purple-700" :evolution="null" />
       </div>
 
-      <div class="grid grid-cols-3 gap-4">
-        <div class="col-span-2 bg-white rounded-xl border border-slate-200 p-5">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5">
           <h3 class="font-medium text-slate-900 mb-4">Revenus mensuels</h3>
           <Line :data="lineChartData" :options="{ responsive: true, plugins: { legend: { display: false } } }" />
         </div>
@@ -87,16 +87,16 @@ onMounted(fetchDashboard)
 
       <div class="bg-white rounded-xl border border-slate-200 p-5 mt-4">
         <h3 class="font-medium text-slate-900 mb-4">Top clients</h3>
-        <div v-for="(c, i) in data.top_clients" :key="i" class="flex justify-between py-2 border-b border-slate-100 last:border-0">
-          <span class="text-sm text-slate-700">{{ c.nom }}</span>
-          <span class="text-sm font-medium text-slate-900">{{ formatMontant(c.total) }}</span>
+        <div v-for="(c, i) in data.top_clients" :key="i" class="flex justify-between gap-2 py-2 border-b border-slate-100 last:border-0">
+          <span class="text-sm text-slate-700 truncate">{{ c.nom }}</span>
+          <span class="text-sm font-medium text-slate-900 whitespace-nowrap">{{ formatMontant(c.total) }}</span>
         </div>
       </div>
     </template>
 
     <!-- Vue USER / COMMERCIAL -->
     <template v-else>
-      <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Mes factures" :value="data.nombre_factures" icon="📄" icon-bg="bg-blue-100" icon-color="text-blue-700" />
         <StatCard label="Montant facturé" :value="formatMontant(data.montant_facture)" icon="$" icon-bg="bg-slate-100" icon-color="text-slate-700" />
         <StatCard label="Montant payé" :value="formatMontant(data.montant_paye)" icon="✓" icon-bg="bg-green-100" icon-color="text-green-700" />
@@ -105,9 +105,9 @@ onMounted(fetchDashboard)
 
       <div class="bg-white rounded-xl border border-slate-200 p-5">
         <h3 class="font-medium text-slate-900 mb-4">Dernières factures</h3>
-        <div v-for="f in data.dernieres_factures" :key="f.id" class="flex justify-between py-2 border-b border-slate-100 last:border-0 text-sm">
-          <span>{{ f.numero || 'Brouillon' }} — {{ f.client.nom }}</span>
-          <span class="font-medium">{{ formatMontant(f.total_ttc) }}</span>
+        <div v-for="f in data.dernieres_factures" :key="f.id" class="flex justify-between gap-2 py-2 border-b border-slate-100 last:border-0 text-sm">
+          <span class="truncate">{{ f.numero || 'Brouillon' }} — {{ f.client.nom }}</span>
+          <span class="font-medium whitespace-nowrap">{{ formatMontant(f.total_ttc) }}</span>
         </div>
       </div>
     </template>

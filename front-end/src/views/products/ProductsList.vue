@@ -15,7 +15,6 @@ const router = useRouter()
 const showStockModal = ref(false)
 const selectedProduct = ref(null)
 
-
 async function fetchProducts() {
   loading.value = true
   const { data } = await productsApi.list({ search: search.value })
@@ -49,7 +48,7 @@ onMounted(fetchProducts)
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900">Produits</h1>
         <p class="text-sm text-slate-500">Gère ton catalogue de produits et services</p>
@@ -71,69 +70,71 @@ onMounted(fetchProducts)
     />
 
     <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
-          <tr>
-            <th class="text-left px-4 py-3">Produit</th>
-            <th class="text-left px-4 py-3">Référence</th>
-            <th class="text-left px-4 py-3">Prix HT</th>
-            <th class="text-left px-4 py-3">TVA</th>
-            <th class="text-left px-4 py-3">Stock</th>
-            <th class="text-left px-4 py-3">Statut</th>
-            <th class="text-right px-4 py-3">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="loading">
-            <td colspan="6" class="text-center py-6 text-slate-400">Chargement...</td>
-          </tr>
-          <tr v-else-if="products.length === 0">
-            <td colspan="6" class="text-center py-6 text-slate-400">Aucun produit</td>
-          </tr>
-          <tr v-for="product in products" :key="product.id" class="border-t border-slate-100">
-            <td class="px-4 py-3">
-              <div class="font-medium text-slate-900">{{ product.nom }}</div>
-              <div class="text-slate-500 text-xs">{{ product.description }}</div>
-            </td>
-            <td class="px-4 py-3 text-slate-600">{{ product.reference }}</td>
-            <td class="px-4 py-3 text-slate-600">{{ formatPrix(product.prix_ht) }} Ar</td>
-            <td class="px-4 py-3 text-slate-600">{{ product.tva }}%</td>
-            <td class="px-4 py-3">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[720px]">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+            <tr>
+              <th class="text-left px-4 py-3">Produit</th>
+              <th class="text-left px-4 py-3">Référence</th>
+              <th class="text-left px-4 py-3">Prix HT</th>
+              <th class="text-left px-4 py-3">TVA</th>
+              <th class="text-left px-4 py-3">Stock</th>
+              <th class="text-left px-4 py-3">Statut</th>
+              <th class="text-right px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="loading">
+              <td colspan="7" class="text-center py-6 text-slate-400">Chargement...</td>
+            </tr>
+            <tr v-else-if="products.length === 0">
+              <td colspan="7" class="text-center py-6 text-slate-400">Aucun produit</td>
+            </tr>
+            <tr v-for="product in products" :key="product.id" class="border-t border-slate-100">
+              <td class="px-4 py-3 max-w-[220px]">
+                <div class="font-medium text-slate-900 truncate">{{ product.nom }}</div>
+                <div class="text-slate-500 text-xs truncate">{{ product.description }}</div>
+              </td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{{ product.reference }}</td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{{ formatPrix(product.prix_ht) }} Ar</td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{{ product.tva }}%</td>
+              <td class="px-4 py-3 whitespace-nowrap">
                 <span class="font-medium" :class="product.stock <= 5 ? 'text-red-600' : 'text-slate-700'">
-                {{ product.stock }} {{ product.unite }}
+                  {{ product.stock }} {{ product.unite }}
                 </span>
-            </td>
-            <td class="px-4 py-3">
-              <span
-                class="text-xs font-medium px-2.5 py-1 rounded-full"
-                :class="product.statut === 'actif'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-slate-100 text-slate-500'"
-              >
-                {{ product.statut === 'actif' ? 'Actif' : 'Inactif' }}
-              </span>
-            </td>
-            <td class="px-4 py-3 text-right space-x-2">
-              <button @click="router.push(`/produits/${product.id}/modifier`)" class="text-blue-600 hover:text-blue-800">✏️</button>
-                <button 
-                    v-if="auth.can('stock.manage')"
-                    @click="openStockModal(product)" 
-                    class="text-slate-600 hover:text-slate-900" title="Mouvement de stock"
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span
+                  class="text-xs font-medium px-2.5 py-1 rounded-full"
+                  :class="product.statut === 'actif'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-slate-100 text-slate-500'"
                 >
-                    📦
+                  {{ product.statut === 'actif' ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-right whitespace-nowrap space-x-2">
+                <button @click="router.push(`/produits/${product.id}/modifier`)" class="text-blue-600 hover:text-blue-800">✏️</button>
+                <button
+                  v-if="auth.can('stock.manage')"
+                  @click="openStockModal(product)"
+                  class="text-slate-600 hover:text-slate-900" title="Mouvement de stock"
+                >
+                  📦
                 </button>
-              <button @click="remove(product)" class="text-red-500 hover:text-red-700">🗑️</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                <button @click="remove(product)" class="text-red-500 hover:text-red-700">🗑️</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+
+    <StockMovementModal
+      v-if="showStockModal"
+      :product="selectedProduct"
+      @close="showStockModal = false"
+      @saved="fetchProducts"
+    />
   </div>
-    <!-- ... juste avant </template> final -->
-  <StockMovementModal
-    v-if="showStockModal"
-    :product="selectedProduct"
-    @close="showStockModal = false"
-    @saved="fetchProducts"
-  />
 </template>

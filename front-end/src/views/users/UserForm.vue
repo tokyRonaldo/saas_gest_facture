@@ -68,7 +68,7 @@ async function submit() {
 </script>
 
 <template>
-  <div class="max-w">
+  <div class="max-w-3xl">
     <div class="flex items-center gap-4 mb-8">
       <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-lg font-semibold shrink-0 shadow-lg shadow-blue-600/20">
         {{ initiales }}
@@ -88,72 +88,67 @@ async function submit() {
     </div>
 
     <form v-else @submit.prevent="submit" class="space-y-5">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            <!-- Section : identité -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm shadow-slate-200/50 p-6">
-              <h2 class="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <UserIcon class="w-4 h-4 text-slate-400" /> Identité
-              </h2>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2">
-                  <FormField for="name" label="Nom complet" required :error="fieldErrors.name">
-                    <TextInput id="name" name="name" autocomplete="name" v-model="form.name" placeholder="Ex. Marie Rakoto" :error="!!fieldErrors.name">
-                      <template #icon><UserIcon class="w-4 h-4" /></template>
-                    </TextInput>
-                  </FormField>
-                </div>
-                <div class="col-span-2">
-                  <FormField for="email" label="Email" required :error="fieldErrors.email">
-                    <TextInput id="email" name="email" type="email" autocomplete="email" v-model="form.email" placeholder="marie@entreprise.com" :error="!!fieldErrors.email">
-                      <template #icon><EnvelopeIcon class="w-4 h-4" /></template>
-                    </TextInput>
-                  </FormField>
-                </div>
-                <div class="col-span-2">
-                  <FormField for="password" :label="isEdit ? 'Nouveau mot de passe' : 'Mot de passe'" :required="!isEdit" :error="fieldErrors.password" :hint="isEdit ? 'Laisser vide pour ne pas le changer' : 'Minimum 8 caractères'">
-                    <TextInput id="password" name="password" type="password" autocomplete="new-password" v-model="form.password" placeholder="••••••••" :error="!!fieldErrors.password">
-                      <template #icon><LockClosedIcon class="w-4 h-4" /></template>
-                    </TextInput>
-                  </FormField>
-                </div>
-              </div>
-            </div>
-      
-            <!-- Section : rôle -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm shadow-slate-200/50 p-6">
-              <h2 class="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <ShieldCheckIcon class="w-4 h-4 text-slate-400" /> Rôle
-              </h2>
-              <div class="space-y-2">
-                <label
-                  v-for="r in roles"
-                  :key="r.value"
-                  class="flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-all"
-                  :class="form.role === r.value ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200 hover:border-slate-300'"
-                >
-                  <input type="radio" :value="r.value" v-model="form.role" class="mt-1 accent-blue-600" />
-                  <div>
-                    <p class="text-sm font-medium text-slate-900">{{ r.label }}</p>
-                    <p class="text-xs text-slate-500">{{ r.desc }}</p>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-        </div>      
-        <p v-if="globalError" class="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-lg">
-            {{ globalError }}
-        </p>
-
-        <div class="sticky bottom-0 bg-slate-50/80 backdrop-blur border-t border-slate-200 -mx-6 px-6 py-4 flex gap-3">
-            <Button type="submit" :loading="saving">
-            {{ isEdit ? 'Enregistrer les modifications' : 'Créer l\'utilisateur' }}
-            </Button>
-            <Button type="button" variant="secondary" @click="router.push('/utilisateurs')">
-            Annuler
-            </Button>
+        <!-- Section : identité -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm shadow-slate-200/50 p-6">
+          <h2 class="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <UserIcon class="w-4 h-4 text-slate-400" /> Identité
+          </h2>
+          <div class="space-y-4">
+            <FormField for="name" label="Nom complet" required :error="fieldErrors.name">
+              <TextInput id="name" name="name" autocomplete="name" v-model="form.name" placeholder="Ex. Marie Rakoto" :error="!!fieldErrors.name">
+                <template #icon><UserIcon class="w-4 h-4" /></template>
+              </TextInput>
+            </FormField>
+            <FormField for="email" label="Email" required :error="fieldErrors.email">
+              <TextInput id="email" name="email" type="email" autocomplete="email" v-model="form.email" placeholder="marie@entreprise.com" :error="!!fieldErrors.email">
+                <template #icon><EnvelopeIcon class="w-4 h-4" /></template>
+              </TextInput>
+            </FormField>
+            <FormField for="password" :label="isEdit ? 'Nouveau mot de passe' : 'Mot de passe'" :required="!isEdit" :error="fieldErrors.password" :hint="isEdit ? 'Laisser vide pour ne pas le changer' : 'Minimum 8 caractères'">
+              <TextInput id="password" name="password" type="password" autocomplete="new-password" v-model="form.password" placeholder="••••••••" :error="!!fieldErrors.password">
+                <template #icon><LockClosedIcon class="w-4 h-4" /></template>
+              </TextInput>
+            </FormField>
+          </div>
         </div>
+
+        <!-- Section : rôle -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm shadow-slate-200/50 p-6">
+          <h2 class="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <ShieldCheckIcon class="w-4 h-4 text-slate-400" /> Rôle
+          </h2>
+          <div class="space-y-2">
+            <label
+              v-for="r in roles"
+              :key="r.value"
+              class="flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-all"
+              :class="form.role === r.value ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200 hover:border-slate-300'"
+            >
+              <input type="radio" :value="r.value" v-model="form.role" class="mt-1 accent-blue-600" />
+              <div>
+                <p class="text-sm font-medium text-slate-900">{{ r.label }}</p>
+                <p class="text-xs text-slate-500">{{ r.desc }}</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <p v-if="globalError" class="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-lg">
+        {{ globalError }}
+      </p>
+
+      <div class="sticky bottom-0 bg-slate-50/80 backdrop-blur border-t border-slate-200 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 flex gap-3">
+        <Button type="submit" :loading="saving">
+          {{ isEdit ? 'Enregistrer les modifications' : 'Créer l\'utilisateur' }}
+        </Button>
+        <Button type="button" variant="secondary" @click="router.push('/utilisateurs')">
+          Annuler
+        </Button>
+      </div>
     </form>
   </div>
 </template>

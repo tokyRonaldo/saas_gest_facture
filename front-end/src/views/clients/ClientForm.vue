@@ -66,7 +66,7 @@ async function submit() {
 </script>
 
 <template>
-  <div class="max-w">
+  <div class="max-w-2xl">
     <div class="flex items-center gap-4 mb-8">
       <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-lg font-semibold shadow-lg shadow-blue-600/20 shrink-0 transition-all">
         {{ initiales }}
@@ -90,8 +90,8 @@ async function submit() {
         <h2 class="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <UserIcon class="w-4 h-4 text-slate-400" /> Identité
         </h2>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
             <FormField for="nom" label="Nom du client" required :error="fieldErrors.nom">
               <TextInput id="nom" name="nom" autocomplete="organization" v-model="form.nom" placeholder="Ex. Société Rakoto SARL" :error="!!fieldErrors.nom">
                 <template #icon><BuildingOfficeIcon class="w-4 h-4" /></template>
@@ -115,8 +115,8 @@ async function submit() {
         <h2 class="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <MapPinIcon class="w-4 h-4 text-slate-400" /> Localisation
         </h2>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
             <FormField for="adresse" label="Adresse" :error="fieldErrors.adresse">
               <TextInput id="adresse" name="adresse" autocomplete="street-address" v-model="form.adresse" placeholder="Lot II M 12 Bis Antanimena" :error="!!fieldErrors.adresse" />
             </FormField>
@@ -147,7 +147,7 @@ async function submit() {
         {{ globalError }}
       </p>
 
-      <div class="sticky bottom-0 bg-slate-50/80 backdrop-blur border-t border-slate-200 -mx-6 px-6 py-4 flex gap-3">
+      <div class="sticky bottom-0 bg-slate-50/80 backdrop-blur border-t border-slate-200 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 flex gap-3">
         <Button type="submit" :loading="saving">
           {{ isEdit ? 'Enregistrer les modifications' : 'Créer le client' }}
         </Button>

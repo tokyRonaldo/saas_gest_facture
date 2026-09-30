@@ -22,7 +22,6 @@ const globalError = ref('')
 const loading = ref(false)
 const saving = ref(false)
 
-// Aperçu du prix TTC en direct, pour aider à vérifier la TVA saisie
 const prixTtcApercu = computed(() => {
   const ht = parseFloat(form.value.prix_ht) || 0
   const tva = parseFloat(form.value.tva) || 0
@@ -69,7 +68,7 @@ async function submit() {
 </script>
 
 <template>
-  <div class="max-w">
+  <div class="max-w-2xl">
     <div class="flex items-center gap-4 mb-8">
       <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-600/20">
         <CubeIcon class="w-7 h-7" />
@@ -94,8 +93,8 @@ async function submit() {
         <h2 class="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <TagIcon class="w-4 h-4 text-slate-400" /> Identification
         </h2>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
             <FormField for="nom" label="Nom du produit" required :error="fieldErrors.nom">
               <TextInput id="nom" name="nom" v-model="form.nom" placeholder="Ex. Ordinateur portable" :error="!!fieldErrors.nom">
                 <template #icon><CubeIcon class="w-4 h-4" /></template>
@@ -108,7 +107,7 @@ async function submit() {
           <FormField for="unite" label="Unité">
             <TextInput id="unite" name="unite" v-model="form.unite" placeholder="unité, kg, heure..." :error="!!fieldErrors.unite" />
           </FormField>
-          <div class="col-span-2">
+          <div class="sm:col-span-2">
             <FormField for="description" label="Description" :error="fieldErrors.description">
               <TextInput id="description" name="description" v-model="form.description" type="textarea" placeholder="Détails visibles sur la fiche produit..." :error="!!fieldErrors.description">
                 <template #icon><DocumentTextIcon class="w-4 h-4 mt-0.5" /></template>
@@ -123,7 +122,7 @@ async function submit() {
         <h2 class="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <CurrencyDollarIcon class="w-4 h-4 text-slate-400" /> Tarification
         </h2>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField for="prix_ht" label="Prix HT" required :error="fieldErrors.prix_ht">
             <TextInput id="prix_ht" name="prix_ht" v-model="form.prix_ht" type="number" placeholder="0.00" :error="!!fieldErrors.prix_ht">
               <template #icon><CurrencyDollarIcon class="w-4 h-4" /></template>
@@ -134,15 +133,14 @@ async function submit() {
           </FormField>
         </div>
 
-        <!-- Aperçu du prix TTC, mis à jour en direct -->
-        <div class="mt-4 bg-blue-50 rounded-lg px-4 py-3 flex items-center justify-between">
+        <div class="mt-4 bg-blue-50 rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
           <span class="text-sm text-blue-700">Prix TTC estimé</span>
           <span class="text-lg font-bold text-blue-900">{{ formatMontant(prixTtcApercu) }} Ar</span>
         </div>
       </div>
 
       <!-- Section : statut -->
-      <div class="bg-white w-1/2 rounded-2xl border border-slate-200 shadow-sm shadow-slate-200/50 p-6">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm shadow-slate-200/50 p-6">
         <h2 class="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <ArchiveBoxIcon class="w-4 h-4 text-slate-400" /> Statut
         </h2>
@@ -174,7 +172,7 @@ async function submit() {
         {{ globalError }}
       </p>
 
-      <div class="sticky bottom-0 bg-slate-50/80 backdrop-blur border-t border-slate-200 -mx-6 px-6 py-4 flex gap-3">
+      <div class="sticky bottom-0 bg-slate-50/80 backdrop-blur border-t border-slate-200 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 flex gap-3">
         <Button type="submit" :loading="saving">
           {{ isEdit ? 'Enregistrer les modifications' : 'Créer le produit' }}
         </Button>

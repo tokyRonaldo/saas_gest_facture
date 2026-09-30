@@ -1,18 +1,19 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSettingsStore } from '@/stores/settings'
 import { settingsApi } from '@/api/settings'
 import { useRouter, useRoute } from 'vue-router'
-import { ChevronRightIcon, UserCircleIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline'
+import {
+  ChevronRightIcon, UserCircleIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon,
+  Bars3Icon, XMarkIcon,
+} from '@heroicons/vue/24/outline'
 
 const auth = useAuthStore()
 const settingsStore = useSettingsStore()
 const router = useRouter()
 const route = useRoute()
 
-// Chaque item porte la permission requise pour être visible.
-// permission: null = toujours visible
 const allNavItems = [
   { label: 'Dashboard', to: '/', icon: '📊', permission: 'dashboard.view' },
   { label: 'Factures', to: '/factures', icon: '📄', permission: 'invoices.view' },
@@ -26,6 +27,14 @@ const navItems = computed(() =>
 )
 
 const roleLabel = { admin: 'Administrateur', user: 'Utilisateur', commercial: 'Commercial' }
+
+// --- Sidebar mobile ---
+const showSidebar = ref(false)
+function closeSidebar() {
+  showSidebar.value = false
+}
+// Ferme automatiquement la sidebar mobile après un changement de page
+watch(() => route.path, closeSidebar)
 
 // --- Dropdown utilisateur ---
 const showUserMenu = ref(false)
@@ -55,24 +64,39 @@ async function logout() {
 
 <template>
   <div class="min-h-screen flex bg-slate-50">
+    <!-- Overlay mobile, ferme la sidebar au clic -->
+    <div
+      v-if="showSidebar"
+      @click="closeSidebar"
+      class="fixed inset-0 bg-black/40 z-30 lg:hidden"
+    ></div>
+
     <!-- Sidebar -->
-    <aside class="w-64 bg-slate-900 text-white flex flex-col">
-      <div class="p-5 flex items-center gap-2 border-b border-slate-800">
-        <div class="w-8 h-8 rounded-lg overflow-hidden bg-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
-          <img
-            v-if="settingsStore.settings?.logo_path"
-            :src="settingsApi.logoUrl(settingsStore.settings.logo_path)"
-            alt="Logo"
-            class="w-full h-full object-contain"
-          />
-          <span v-else>{{ settingsStore.settings?.nom_entreprise?.[0] || 'F' }}</span>
+    <aside
+      class="w-64 bg-slate-900 text-white flex flex-col fixed inset-y-0 left-0 z-40 transition-transform duration-200 lg:static lg:translate-x-0"
+      :class="showSidebar ? 'translate-x-0' : '-translate-x-full'"
+    >
+      <div class="p-5 flex items-center justify-between gap-2 border-b border-slate-800">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-8 h-8 rounded-lg overflow-hidden bg-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
+            <img
+              v-if="settingsStore.settings?.logo_path"
+              :src="settingsApi.logoUrl(settingsStore.settings.logo_path)"
+              alt="Logo"
+              class="w-full h-full object-contain"
+            />
+            <span v-else>{{ settingsStore.settings?.nom_entreprise?.[0] || 'F' }}</span>
+          </div>
+          <span class="font-bold text-lg truncate">
+            {{ settingsStore.settings?.nom_entreprise || 'FacturaApp' }}
+          </span>
         </div>
-        <span class="font-bold text-lg truncate">
-          {{ settingsStore.settings?.nom_entreprise || 'FacturaApp' }}
-        </span>
+        <button @click="closeSidebar" class="lg:hidden text-slate-400 hover:text-white shrink-0">
+          <XMarkIcon class="w-5 h-5" />
+        </button>
       </div>
 
-      <nav class="flex-1 p-3 space-y-1">
+      <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
         <router-link
           v-for="item in navItems"
           :key="item.to"
@@ -89,28 +113,34 @@ async function logout() {
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0">
-      <header class="h-14 bg-white/80 backdrop-blur border-b border-slate-200 flex items-center px-6 justify-between relative">
-        <nav class="flex items-center gap-1.5 text-sm">
-          <template v-for="(crumb, i) in route.meta.breadcrumb || []" :key="i">
-            <ChevronRightIcon v-if="i > 0" class="w-3.5 h-3.5 text-slate-300" />
-            <router-link
-              v-if="crumb.to"
-              :to="crumb.to"
-              class="text-slate-400 hover:text-slate-700 transition-colors font-medium"
-            >
-              {{ crumb.label }}
-            </router-link>
-            <span v-else class="text-slate-900 font-medium">{{ crumb.label }}</span>
-          </template>
-        </nav>
+      <header class="h-14 bg-white/80 backdrop-blur border-b border-slate-200 flex items-center px-4 lg:px-6 justify-between relative gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <button @click="showSidebar = true" class="lg:hidden text-slate-500 hover:text-slate-900 shrink-0">
+            <Bars3Icon class="w-6 h-6" />
+          </button>
+
+          <nav class="flex items-center gap-1.5 text-sm overflow-x-auto whitespace-nowrap">
+            <template v-for="(crumb, i) in route.meta.breadcrumb || []" :key="i">
+              <ChevronRightIcon v-if="i > 0" class="w-3.5 h-3.5 text-slate-300 shrink-0" />
+              <router-link
+                v-if="crumb.to"
+                :to="crumb.to"
+                class="text-slate-400 hover:text-slate-700 transition-colors font-medium"
+              >
+                {{ crumb.label }}
+              </router-link>
+              <span v-else class="text-slate-900 font-medium">{{ crumb.label }}</span>
+            </template>
+          </nav>
+        </div>
 
         <!-- Zone utilisateur avec dropdown -->
-        <div ref="menuRef" class="relative">
+        <div ref="menuRef" class="relative shrink-0">
           <button
             @click="toggleUserMenu"
             class="flex items-center gap-3 hover:bg-slate-100 rounded-lg px-2 py-1.5 transition"
           >
-            <div class="text-right">
+            <div class="text-right hidden sm:block">
               <p class="text-sm font-medium text-slate-900">{{ auth.user?.name }}</p>
               <p class="text-xs text-slate-500">{{ roleLabel[auth.user?.roles?.[0]] }}</p>
             </div>
@@ -172,7 +202,7 @@ async function logout() {
         </div>
       </header>
 
-      <main class="flex-1 p-6">
+      <main class="flex-1 p-4 lg:p-6 overflow-x-hidden">
         <router-view />
       </main>
     </div>

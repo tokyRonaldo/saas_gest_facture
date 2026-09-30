@@ -37,8 +37,6 @@ function supprimerLigne(index) {
   form.value.items.splice(index, 1)
 }
 
-// Calcule l'échéance à +30 jours par défaut dès que la date d'émission change,
-// tant que l'utilisateur n'a pas déjà personnalisé l'échéance à la main
 const echeanceModifieeManuellement = ref(false)
 function onEmissionChange(value) {
   form.value.date_emission = value
@@ -94,7 +92,7 @@ onMounted(async () => {
     form.value.client_id = data.client_id
     form.value.date_emission = data.date_emission
     form.value.date_echeance = data.date_echeance
-    echeanceModifieeManuellement.value = true // pas de recalcul auto en édition
+    echeanceModifieeManuellement.value = true
     form.value.items = data.items.map(i => ({ product_id: i.product_id, quantite: i.quantite }))
   }
   loading.value = false
@@ -127,7 +125,7 @@ async function submit() {
 </script>
 
 <template>
-  <div class="max-w">
+  <div class="max-w-3xl">
     <div class="flex items-center gap-4 mb-8">
       <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-600/20">
         <ShoppingCartIcon class="w-7 h-7" />
@@ -152,8 +150,8 @@ async function submit() {
         <h2 class="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <UserIcon class="w-4 h-4 text-slate-400" /> Client & dates
         </h2>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
             <FormField for="client" label="Client" required :error="fieldErrors.client_id">
               <select
                 id="client"
@@ -190,7 +188,7 @@ async function submit() {
 
       <!-- Section : lignes de facture -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm shadow-slate-200/50 p-6">
-        <div class="flex items-center justify-between mb-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
           <h2 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
             <ShoppingCartIcon class="w-4 h-4 text-slate-400" /> Produits & services
           </h2>
@@ -209,16 +207,18 @@ async function submit() {
           Aucune ligne — ajoute au moins un produit pour continuer
         </div>
 
-        <div>
-          <LineItemRow
-            v-for="(item, i) in form.items"
-            :key="i"
-            v-model="form.items[i]"
-            :products="products"
-            :produits-disponibles="produitsDisponiblesPour(i)"
-            :error="fieldErrors[`items.${i}.product_id`]"
-            @remove="supprimerLigne(i)"
-          />
+        <div class="overflow-x-auto">
+          <div class="min-w-[480px]">
+            <LineItemRow
+              v-for="(item, i) in form.items"
+              :key="i"
+              v-model="form.items[i]"
+              :products="products"
+              :produits-disponibles="produitsDisponiblesPour(i)"
+              :error="fieldErrors[`items.${i}.product_id`]"
+              @remove="supprimerLigne(i)"
+            />
+          </div>
         </div>
 
         <!-- Totaux -->
@@ -239,14 +239,16 @@ async function submit() {
         {{ globalError }}
       </p>
 
-      <div class="sticky bottom-0 bg-slate-50/80 backdrop-blur border-t border-slate-200 -mx-6 px-6 py-4 flex items-center gap-3">
-        <Button type="submit" :loading="saving" :disabled="form.items.length === 0">
-          {{ isEdit ? 'Enregistrer les modifications' : 'Créer le brouillon' }}
-        </Button>
-        <Button type="button" variant="secondary" @click="router.push('/factures')">
-          Annuler
-        </Button>
-        <span class="ml-auto text-sm font-medium text-slate-500">
+      <div class="sticky bottom-0 bg-slate-50/80 backdrop-blur border-t border-slate-200 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex gap-3">
+          <Button type="submit" :loading="saving" :disabled="form.items.length === 0">
+            {{ isEdit ? 'Enregistrer les modifications' : 'Créer le brouillon' }}
+          </Button>
+          <Button type="button" variant="secondary" @click="router.push('/factures')">
+            Annuler
+          </Button>
+        </div>
+        <span class="sm:ml-auto text-sm font-medium text-slate-500">
           Total : {{ formatMontant(totaux.totalTtc) }} Ar
         </span>
       </div>

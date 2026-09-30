@@ -131,7 +131,7 @@ function formatMontant(m) {
   return new Intl.NumberFormat('fr-FR').format(m)
 }
 
-function formatDate(date){
+function formatDate(date) {
   return new Date(date).toLocaleDateString('fr-FR')
 }
 
@@ -143,7 +143,7 @@ function pourcentagePaye(invoice) {
 async function rafraichirDetail() {
   const { data } = await invoicesApi.get(selectedInvoice.value.id)
   selectedInvoice.value = data
-  fetchInvoices() // pour mettre à jour le statut dans la liste aussi
+  fetchInvoices()
 }
 
 async function telechargerPdf() {
@@ -160,114 +160,120 @@ onMounted(fetchInvoices)
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-900">Factures</h1>
         <p class="text-sm text-slate-500">Gère toutes tes factures</p>
       </div>
       <router-link
         to="/factures/nouvelle"
-        class="bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-blue-700 transition"
+        class="bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-blue-700 transition text-center"
       >
         + Nouvelle facture
       </router-link>
     </div>
 
     <!-- Barre de recherche + filtres -->
-    <div class="flex flex-wrap items-center gap-3 mb-4">
-      <input
-        v-model="search"
-        type="text"
-        placeholder="Rechercher par numéro ou client..."
-        class="flex-1 min-w-[240px] px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm
-               focus:outline-none focus:ring-2 focus:ring-blue-600"
-      />
+    <div class="bg-white rounded-xl border border-slate-200 p-4 mb-4">
+      <div class="flex flex-col lg:flex-row lg:flex-wrap lg:items-end gap-3">
+        <div class="w-full lg:flex-1 lg:min-w-[200px]">
+          <label class="block text-xs font-medium text-slate-500 mb-1.5 lg:hidden">Rechercher</label>
+          <input
+            v-model="search"
+            type="text"
+            placeholder="Rechercher par numéro ou client..."
+            class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+        </div>
 
-      <select
-        v-model="statutFiltre"
-        class="px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-      >
-        <option v-for="f in filtresStatut" :key="f.value" :value="f.value">{{ f.label }}</option>
-      </select>
+        <div class="grid grid-cols-2 lg:flex gap-3 w-full lg:w-auto">
+          <div class="col-span-2 lg:col-span-1">
+            <label class="block text-xs font-medium text-slate-500 mb-1.5 lg:hidden">Statut</label>
+            <select
+              v-model="statutFiltre"
+              class="w-full lg:w-auto px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+            >
+              <option v-for="f in filtresStatut" :key="f.value" :value="f.value">{{ f.label }}</option>
+            </select>
+          </div>
 
-      <input
-        v-model="dateDebut"
-        type="date"
-        class="px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm"
-        title="Émise à partir du"
-      />
-      <span class="text-slate-400 text-sm">→</span>
-      <input
-        v-model="dateFin"
-        type="date"
-        class="px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm"
-        title="Émise jusqu'au"
-      />
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1.5 lg:hidden">Émise du</label>
+            <input v-model="dateDebut" type="date" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1.5 lg:hidden">au</label>
+            <input v-model="dateFin" type="date" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm" />
+          </div>
+        </div>
 
-      <button
-        v-if="search || statutFiltre || dateDebut || dateFin"
-        @click="reinitialiserFiltres"
-        class="px-4 py-2.5 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition"
-      >
-        Réinitialiser
-      </button>
-
+        <button
+          v-if="search || statutFiltre || dateDebut || dateFin"
+          @click="reinitialiserFiltres"
+          class="px-4 py-2.5 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition w-full lg:w-auto"
+        >
+          Réinitialiser
+        </button>
+      </div>
     </div>
 
-     <!-- Tableau -->
+    <!-- Tableau — scroll horizontal contrôlé sur petit écran -->
     <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
-          <tr>
-            <th class="text-left px-4 py-3">Numéro</th>
-            <th class="text-left px-4 py-3">Client</th>
-            <th class="text-left px-4 py-3">Émission</th>
-            <th class="text-left px-4 py-3">Échéance</th>
-            <th class="text-left px-4 py-3">Total TTC</th>
-            <th class="text-left px-4 py-3">Statut</th>
-            <th class="text-right px-4 py-3">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="loading"><td colspan="7" class="text-center py-6 text-slate-400">Chargement...</td></tr>
-          <tr v-else-if="invoices.length === 0"><td colspan="7" class="text-center py-6 text-slate-400">Aucune facture trouvée</td></tr>
-          <tr v-for="inv in invoices" :key="inv.id" class="border-t border-slate-100">
-            <td class="px-4 py-3 font-medium text-slate-900">{{ inv.numero || '—' }}</td>
-            <td class="px-4 py-3 text-slate-600">{{ inv.client.nom }}</td>
-            <td class="px-4 py-3 text-slate-600">{{ formatDate(inv.date_emission) }}</td>
-            <td class="px-4 py-3 text-slate-600">{{ formatDate(inv.date_echeance) }}</td>
-            <td class="px-4 py-3 text-slate-600">{{ formatMontant(inv.total_ttc) }} Ar</td>
-            <td class="px-4 py-3 space-x-1">
-              <span class="text-xs font-medium px-2.5 py-1 rounded-full" :class="statutStyle[inv.statut]">
-                {{ statutLabel[inv.statut] }}
-              </span>
-              <span v-if="estEnRetard(inv)" class="text-xs font-medium px-2.5 py-1 rounded-full bg-orange-100 text-orange-700">
-                En retard
-              </span>
-              <span v-if="inv.partiellement_payee" class="text-xs font-medium px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700">
-                Partielle
-              </span>
-            </td>
-            <td class="px-4 py-3 text-right space-x-2">
-              <button @click="openDetail(inv)" class="text-blue-600 hover:text-blue-800" title="Voir">👁️</button>
-              <router-link
-                v-if="inv.statut === 'brouillon'"
-                :to="`/factures/${inv.id}/modifier`"
-                class="text-slate-600 hover:text-slate-900"
-                title="Modifier"
-              >✏️</router-link>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[720px]">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+            <tr>
+              <th class="text-left px-4 py-3">Numéro</th>
+              <th class="text-left px-4 py-3">Client</th>
+              <th class="text-left px-4 py-3">Émission</th>
+              <th class="text-left px-4 py-3">Échéance</th>
+              <th class="text-left px-4 py-3">Total TTC</th>
+              <th class="text-left px-4 py-3">Statut</th>
+              <th class="text-right px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="loading"><td colspan="7" class="text-center py-6 text-slate-400">Chargement...</td></tr>
+            <tr v-else-if="invoices.length === 0"><td colspan="7" class="text-center py-6 text-slate-400">Aucune facture trouvée</td></tr>
+            <tr v-for="inv in invoices" :key="inv.id" class="border-t border-slate-100">
+              <td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">{{ inv.numero || '—' }}</td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{{ inv.client.nom }}</td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{{ formatDate(inv.date_emission) }}</td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{{ formatDate(inv.date_echeance) }}</td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{{ formatMontant(inv.total_ttc) }} Ar</td>
+              <td class="px-4 py-3 whitespace-nowrap space-x-1">
+                <span class="text-xs font-medium px-2.5 py-1 rounded-full" :class="statutStyle[inv.statut]">
+                  {{ statutLabel[inv.statut] }}
+                </span>
+                <span v-if="estEnRetard(inv)" class="text-xs font-medium px-2.5 py-1 rounded-full bg-orange-100 text-orange-700">
+                  En retard
+                </span>
+                <span v-if="inv.partiellement_payee" class="text-xs font-medium px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700">
+                  Partielle
+                </span>
+              </td>
+              <td class="px-4 py-3 text-right whitespace-nowrap space-x-2">
+                <button @click="openDetail(inv)" class="text-blue-600 hover:text-blue-800" title="Voir">👁️</button>
+                <router-link
+                  v-if="inv.statut === 'brouillon'"
+                  :to="`/factures/${inv.id}/modifier`"
+                  class="text-slate-600 hover:text-slate-900"
+                  title="Modifier"
+                >✏️</router-link>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Modal détail -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" @click.self="showModal = false">
-      <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto">
+    <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" @click.self="showModal = false">
+      <div class="bg-white rounded-xl p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold text-slate-900">{{ selectedInvoice.numero || 'Brouillon' }}</h2>
-          <div class="flex items-center gap-2">
+          <h2 class="text-lg font-bold text-slate-900 truncate pr-2">{{ selectedInvoice.numero || 'Brouillon' }}</h2>
+          <div class="flex items-center gap-2 shrink-0">
             <button
               v-if="selectedInvoice.numero"
               @click="telechargerPdf"
@@ -284,36 +290,36 @@ onMounted(fetchInvoices)
         <p class="text-sm text-slate-600 mb-1">Client : <strong>{{ selectedInvoice.client.nom }}</strong></p>
         <p class="text-sm text-slate-600 mb-4">Émission : {{ formatDate(selectedInvoice.date_emission) }} — Échéance : {{ formatDate(selectedInvoice.date_echeance) }}</p>
 
-        <table class="w-full text-sm mb-4">
-          <thead class="text-slate-500 text-xs uppercase border-b border-slate-200">
-            <tr><th class="text-left py-2">Produit</th><th>Qté</th><th>PU HT</th><th>TVA</th></tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in selectedInvoice.items" :key="item.id" class="border-b border-slate-100">
-              <td class="py-2">{{ item.product.nom }}</td>
-              <td class="text-center">{{ item.quantite }}</td>
-              <td class="text-center">{{ item.prix_unitaire_ht }} Ar</td>
-              <td class="text-center">{{ item.tva_taux }}%</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="overflow-x-auto mb-4">
+          <table class="w-full text-sm min-w-[400px]">
+            <thead class="text-slate-500 text-xs uppercase border-b border-slate-200">
+              <tr><th class="text-left py-2">Produit</th><th>Qté</th><th>PU HT</th><th>TVA</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in selectedInvoice.items" :key="item.id" class="border-b border-slate-100">
+                <td class="py-2">{{ item.product.nom }}</td>
+                <td class="text-center">{{ item.quantite }}</td>
+                <td class="text-center whitespace-nowrap">{{ item.prix_unitaire_ht }} Ar</td>
+                <td class="text-center">{{ item.tva_taux }}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="text-right font-bold text-lg mb-4">Total TTC : {{ formatMontant(selectedInvoice.total_ttc) }} Ar</div>
 
-         <!-- Section paiements — visible seulement si envoyée ou payée -->
         <div v-if="['envoyee', 'payee'].includes(selectedInvoice.statut)" class="border-t border-slate-200 pt-4 mt-4">
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
             <h3 class="font-medium text-slate-900">Paiements</h3>
             <button
               v-if="selectedInvoice.statut === 'envoyee'"
               @click="showPaymentModal = true"
-              class="text-blue-600 text-sm font-medium hover:text-blue-800"
+              class="text-blue-600 text-sm font-medium hover:text-blue-800 text-left sm:text-right"
             >
               + Enregistrer un paiement
             </button>
           </div>
 
-          <!-- Barre de progression -->
           <div class="mb-3">
             <div class="flex justify-between text-xs text-slate-500 mb-1">
               <span>{{ formatMontant(selectedInvoice.montant_paye) }} Ar payés</span>
@@ -333,7 +339,6 @@ onMounted(fetchInvoices)
             </span>
           </div>
 
-          <!-- Historique des paiements -->
           <div v-if="selectedInvoice.payments?.length" class="space-y-1">
             <div
               v-for="p in selectedInvoice.payments"
@@ -355,8 +360,7 @@ onMounted(fetchInvoices)
 
         <p v-if="error" class="text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg mb-3">{{ error }}</p>
 
-        <div class="flex gap-2 justify-end">
-          <!-- Brouillon : Envoyer + Supprimer -->
+        <div class="flex flex-col sm:flex-row gap-2 sm:justify-end mt-2">
           <template v-if="selectedInvoice.statut === 'brouillon'">
             <button @click="demanderSuppression(selectedInvoice)" class="bg-red-100 text-red-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-200">
               Supprimer
@@ -366,7 +370,6 @@ onMounted(fetchInvoices)
             </button>
           </template>
 
-          <!-- Envoyée : Annuler seulement -->
           <button
             v-else-if="selectedInvoice.statut === 'envoyee'"
             @click="demanderAnnulation"
@@ -374,13 +377,10 @@ onMounted(fetchInvoices)
           >
             Annuler la facture
           </button>
-
-          <!-- Payée / Annulée : aucune action -->
         </div>
       </div>
     </div>
 
-    <!-- Modal de confirmation générique -->
     <ConfirmModal
       v-if="confirmState"
       :title="confirmState.title"
