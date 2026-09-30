@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSettingsStore } from '@/stores/settings'
 import { settingsApi } from '@/api/settings'
@@ -11,13 +11,19 @@ const settingsStore = useSettingsStore()
 const router = useRouter()
 const route = useRoute()
 
-const navItems = [
-  { label: 'Dashboard', to: '/', icon: '📊' },
-  { label: 'Factures', to: '/factures', icon: '📄' },
-  { label: 'Produits', to: '/produits', icon: '📦' },
-  { label: 'Clients', to: '/clients', icon: '👥' },
-  { label: 'Utilisateurs', to: '/utilisateurs', icon: '👤' },
+// Chaque item porte la permission requise pour être visible.
+// permission: null = toujours visible
+const allNavItems = [
+  { label: 'Dashboard', to: '/', icon: '📊', permission: 'dashboard.view' },
+  { label: 'Factures', to: '/factures', icon: '📄', permission: 'invoices.view' },
+  { label: 'Produits', to: '/produits', icon: '📦', permission: 'products.view' },
+  { label: 'Clients', to: '/clients', icon: '👥', permission: 'clients.view' },
+  { label: 'Utilisateurs', to: '/utilisateurs', icon: '👤', permission: 'users.view' },
 ]
+
+const navItems = computed(() =>
+  allNavItems.filter(item => !item.permission || auth.can(item.permission))
+)
 
 const roleLabel = { admin: 'Administrateur', user: 'Utilisateur', commercial: 'Commercial' }
 
@@ -142,7 +148,7 @@ async function logout() {
                   Mon profil
                 </router-link>
                 <router-link
-                  v-if="auth.user?.roles?.includes('admin')"
+                  v-if="auth.can('settings.manage')"
                   to="/parametres"
                   @click="showUserMenu = false"
                   class="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
